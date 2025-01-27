@@ -1,49 +1,81 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  Modal,
+  ActivityIndicator
+} from 'react-native';
+import axios from 'axios';
 import { useForm, Controller } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios'
+import BlinkingText from './BlinkingText';
 
-const Register = ({ route, setToken }) => {
-
-    const [error, setError] = useState('')
+const Register = ({route, setToken}) => {
+  const navigation = useNavigation();
+  const [loadModalVisible, setLoadModalVisible] = useState(false)
+  const [error, setError] = useState('')
 
     const { control, handleSubmit, formState: { errors } } = useForm();
-    const navigation = useNavigation();
 
     const handleRegister = async(data) => {
-        try {
-            const response = await axios.post("http://192.168.1.59:4000/api/register", data);
-            setError("");
-            setToken(response.data.token);
-        } catch (error) {
-            if (error.response?.status === 400) {
-                setError("User already exists, Please login!");
-            } else {
-                setError("An error occurred during register");
-            }
-            console.error("Register error:", error);
-        }
-    }
+      try {
+          const response = await axios.post("https://laundry-backend-1-omo2.onrender.com/api/register", data);
+          setError("");
+          setToken(response.data.token);
+          return response.data
+      } catch (error) {
+          if (error.response?.status === 400) {
+              setError("User already exists, Please login!");
+          } else {
+              setError("An error occurred during register");
+          }
+          console.error("Register error:", error);
+          return error.response
+      }
+  }
 
-    const onSubmit = (data) => {
-        handleRegister(data);
-    };
-    
+  const onSubmit = (data) => {
+    setLoadModalVisible(true)
+      handleRegister(data).then(() => {
+        setLoadModalVisible(false)
+      })
+  };
 
-    return (
-        <View style={styles.authContainer}>
-            <View style={styles.authCard}>
-                <Text style={styles.title}>Register</Text>
-                {error && <Text style={styles.errorMessage}>{error}</Text>}
-                <View style={styles.formGroup}>
-                    <Text>Name</Text>
-                    <Controller
+  return (
+    <SafeAreaView style={styles.container}>
+      <Modal
+        visible={loadModalVisible}
+        animationType="slide"
+        onRequestClose={() => {}}
+        transparent={true}
+      >
+        <View style={styles.batchModalCenterView}>
+          <View>
+            <ActivityIndicator color={'#92EDE1'} size={"large"} />
+            <BlinkingText text="Please wait...." duration={1000} />
+          </View>
+        </View>
+      </Modal>
+      <View style={styles.contentContainer}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Sign up to get started</Text>
+        </View>
+        {error && <Text style={styles.errorMessage}>{error}</Text>} 
+        <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Name</Text>
+            <Controller
                         control={control}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
                                 style={styles.input}
                                 placeholder="Enter Name"
+                                placeholderTextColor="#999"
                                 onBlur={onBlur}
                                 onChangeText={onChange}
                                 value={value}
@@ -59,16 +91,17 @@ const Register = ({ route, setToken }) => {
                         }}
                     />
                     {errors.name && <Text style={styles.errorMessage}>{errors.name.message}</Text>}
-                </View>
+          </View>
 
-                <View style={styles.formGroup}>
-                    <Text>Email</Text>
-                    <Controller
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <Controller
                         control={control}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
                                 style={styles.input}
                                 placeholder="Email"
+                                placeholderTextColor="#999"
                                 keyboardType="email-address"
                                 onBlur={onBlur}
                                 onChangeText={onChange}
@@ -85,16 +118,17 @@ const Register = ({ route, setToken }) => {
                         }}
                     />
                     {errors.email && <Text style={styles.errorMessage}>{errors.email.message}</Text>}
-                </View>
+          </View>
 
-                <View style={styles.formGroup}>
-                    <Text>Password</Text>
-                    <Controller
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <Controller
                         control={control}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
                                 style={styles.input}
                                 placeholder="Password"
+                                placeholderTextColor="#999"
                                 secureTextEntry
                                 onBlur={onBlur}
                                 onChangeText={onChange}
@@ -111,78 +145,114 @@ const Register = ({ route, setToken }) => {
                         }}
                     />
                     {errors.password && <Text style={styles.errorMessage}>{errors.password.message}</Text>}
-                </View>
 
-                <Button title="Register" onPress={handleSubmit(onSubmit)} color="#1d4ed8" />
-                
-                <Text style={styles.authSwitch}>
-                    Already have an account?{' '}
-                    <Text style={styles.switchButton} onPress={() => navigation.navigate('Login')}>
-                        Login
-                    </Text>
-                </Text>
-            </View>
+          <TouchableOpacity onPress={handleSubmit(onSubmit)} style={styles.registerButton}>
+            <Text style={styles.registerButtonText}>Create Account</Text>
+          </TouchableOpacity>
         </View>
-    );
+
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      </View>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    authContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100%',
-        padding: 20,
-        backgroundColor: '#f0f0f0', // Replace with your variable
-    },
-    authCard: {
-        backgroundColor: '#ffffff', // Replace with your variable
-        padding: 32,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-        width: '100%',
-        maxWidth: 400,
-    },
-    title: {
-        fontSize: 24,
-        textAlign: 'center',
-        color: '#333', // Replace with your variable
-        marginBottom: 24,
-    },
-    formGroup: {
-        marginBottom: 15,
-    },
-    input: {
-        padding: 12,
-        borderWidth: 1,
-        borderColor: '#ccc', // Replace with your variable
-        borderRadius: 4,
-        fontSize: 16,
-        backgroundColor: '#ffffff', // Replace with your variable
-        color: '#333', // Replace with your variable
-    },
-    errorMessage: {
-        color: '#ff3333',
-        backgroundColor: '#ffe6e6',
-        padding: 10,
-        borderRadius: 4,
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    authSwitch: {
-        textAlign: 'center',
-        marginTop: 20,
-        color: '#666', // Replace with your variable
-    },
-    switchButton: {
-        color: '#1d4ed8', // Replace with your variable
-        fontWeight: '500',
-        textDecorationLine: 'underline',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'space-between',
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+  },
+  formContainer: {
+    marginBottom: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  input: {
+    height: 50,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#333',
+  },
+  registerButton: {
+    backgroundColor: '#007bff',
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  loginText: {
+    color: '#666',
+    fontSize: 16,
+  },
+  loginLink: {
+    color: '#007bff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  errorMessage: {
+    color: '#ff3333',
+    backgroundColor: '#ffe6e6',
+    padding: 10,
+    borderRadius: 4,
+    marginBottom: 15,
+    textAlign: 'center',
+},
+batchModalCenterView: {
+  flex: 1,
+  justifyContent: 'center',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+},
 });
 
 export default Register;
