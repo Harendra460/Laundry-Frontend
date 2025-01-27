@@ -1,9 +1,9 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Register from '../src/Register';
-import Login from '../src/Login';
-import VendorSearch from '../src/VendorSearch';
+import Register from '../components/Register';
+import Login from '../components/Login';
+import VendorSearch from '../components/VendorSearch';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createNativeStackNavigator();
