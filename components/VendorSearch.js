@@ -1,111 +1,112 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, PermissionsAndroid, Platform, Linking, Alert } from 'react-native';
-import Geolocation from '@react-native-community/geolocation';
-import axios from 'axios';
+import React, { useState} from 'react';
+import { View, Text, TextInput, FlatList, StyleSheet } from 'react-native';
 
 const VendorSearch = () => {
     const [location, setLocation] = useState(null);
-    const [vendors, setVendors] = useState([]);
+    // const [vendors, setVendors] = useState([]);
     const [serviceFilter, setServiceFilter] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // const vendorsList = [
-    //     {   
-    //         id: 1,
-    //         name: 'Harendra', 
-    //         city: 'Hyderabad',
-    //         service_name: 'Washing'
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Hari', 
-    //         city: 'Bangalore',
-    //         service_name: 'Clothes'
-    //     },
-    //     {   
-    //         id:3,
-    //         name: '13434', 
-    //         city: 'Chennai',
-    //         service_name: 'Dry cleaning'
-    //     },
-    //     {
-    //         id: 4,
-    //         name: 'yugjhc', 
-    //         city: 'Delhi',
-    //         service_name: 'Iron'
-    //     },
-    //     {
-    //         id: 5,
-    //         name: 'nicuskfj', 
-    //         city: 'Noida',
-    //         service_name: 'Plumber'
-    //     },
-    // ]
+    const vendorsList = [
+        {   
+            id: 1,
+            name: 'Vikas', 
+            mobile: 352352113,
+            city: 'Hyderabad',
+            service_name: 'Washing'
+        },
+        {
+            id: 2,
+            name: 'Kiran', 
+            mobile: 984156463,
+            city: 'Hyderabad',
+            service_name: 'Washing and Folding'
+        },
+        {   
+            id: 3,
+            name: 'Anil', 
+            mobile: 7489658465,
+            city: 'Hyderabad',
+            service_name: 'Dry cleaning'
+        },
+        {
+            id: 4,
+            name: 'Sunil', 
+            mobile: 9465326453,
+            city: 'Hyderabad',
+            service_name: 'Ironing'
+        },
+        {
+            id: 5,
+            name: 'Rajesh', 
+            mobile: 265238653,
+            city: 'Hyderabad',
+            service_name: 'Express Laundry'
+        },
+        {
+            id: 6,
+            name: 'Suresh',
+            mobile: 286532461, 
+            city: 'Hyderabad',
+            service_name: 'Premium Laundry'
+        },
+        {
+            id: 7,
+            name: 'Ramesh',
+            mobile: 96532451, 
+            city: 'Hyderabad',
+            service_name: 'Clothes Washing'
+        },
+        {
+            id: 8,
+            name: 'Mahesh', 
+            mobile: 2964518465,
+            city: 'Hyderabad',
+            service_name: 'Full Laundry Service'
+        },
+        {
+            id: 9,
+            name: 'Naveen', 
+            mobile: 9465312461,
+            city: 'Hyderabad',
+            service_name: 'Laundry Pickup'
+        },
+        {
+            id: 10,
+            name: 'Ravi', 
+            mobile: 86453124312,
+            city: 'Hyderabad',
+            service_name: 'Washing'
+        },
+    ]
 
-    useLayoutEffect(() => {
-        const requestLocationPermission = async () => {
-            if (Platform.OS === 'android') {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-                    {
-                        title: "Location Permission",
-                        message: "This app needs access to your location.",
-                        buttonNeutral: "Ask Me Later",
-                        buttonNegative: "Cancel",
-                        buttonPositive: "OK"
-                    }
-                );
+    // const fetchVendors = async (lat, lon) => {
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get('https://laundry-backend-1-omo2.onrender.com/api/vendors/search', {
+    //             params: { 
+    //                 latitude: lat, 
+    //                 longitude: lon,
+    //                 service: serviceFilter 
+    //             }
+    //         });
 
-                console.log("Location permission status:", granted);
+    //         setVendors(response.data);
+    //     } catch (error) {
+    //         console.error(error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
-                return granted === PermissionsAndroid.RESULTS.GRANTED;
-            } else {
-                return true;
-            }
-        };
-
-        const getLocation = async () => {
-            const hasPermission = await requestLocationPermission();
-            if (hasPermission) {
-                Geolocation.getCurrentPosition(
-                    position => {
-                        const { latitude, longitude } = position.coords;
-                        setLocation({ latitude, longitude });
-                        fetchVendors(latitude, longitude);
-                    },
-                    error => console.log(error),
-                    { enableHighAccuracy: true, timeout: 20000 }
-                );
-            } else {
-                console.log("Location permission denied");
-            }
-        };
-
-        getLocation();
-    }, []);
-
-    const fetchVendors = async (lat, lon) => {
-        setLoading(true);
-        try {
-            const response = await axios.get('http://192.168.1.59:4000/api/vendors/search', {
-                params: { 
-                    latitude: lat, 
-                    longitude: lon,
-                    service: serviceFilter 
-                }
-            });
-
-            setVendors(response.data);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const filteredVendors = vendorsList.filter(vendor => 
+        vendor.service_name.toLowerCase().includes(serviceFilter.toLowerCase())
+    );
 
     const renderVendorItem = ({ item }) => (
         <View style={styles.vendorCard}>
             <Text style={styles.vendorName}>Vendor Name: {item.name}</Text>
+            <Text style={styles.vendorCity}>Mobile: {item.mobile}</Text>
             <Text style={styles.vendorCity}>City: {item.city}</Text>
             <Text style={styles.vendorService}>Services: {item.service_name}</Text>
         </View>
@@ -121,18 +122,18 @@ const VendorSearch = () => {
                 placeholderTextColor="#888"
                 value={serviceFilter}
                 onChangeText={setServiceFilter}
-                onSubmitEditing={() => 
-                    location && fetchVendors(location.latitude, location.longitude)
-                }
+                // onSubmitEditing={() => 
+                //     location && fetchVendors(location.latitude, location.longitude)
+                // }
                 style={styles.input}
             />
             {loading ? (
                 <Text style={styles.loadingText}>Loading...</Text>
-            ) : vendors.length === 0 ? (
+            ) : filteredVendors.length === 0 ? (
                 <Text style={styles.loadingText}>No vendors available!</Text>
             ) : (
                 <FlatList
-                    data={vendors}
+                    data={filteredVendors}
                     renderItem={renderVendorItem}
                     keyExtractor={item => item.id.toString()}
                 />
@@ -189,12 +190,12 @@ const styles = StyleSheet.create({
     vendorName: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 5
+        marginBottom: 10
     },
     vendorCity: {
         fontSize: 16,
         color: '#555',
-        marginBottom: 5
+        marginBottom: 10
     },
     vendorService: {
         fontSize: 16,
